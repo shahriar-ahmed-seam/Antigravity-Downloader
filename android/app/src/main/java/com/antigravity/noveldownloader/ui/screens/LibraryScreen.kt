@@ -26,26 +26,14 @@ import com.antigravity.noveldownloader.ui.theme.AppColors
 fun LibraryScreen(vm: AppViewModel) {
     val books by vm.library.collectAsState()
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         PanelCard {
-            Row {
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     SectionTitle("Library Shelf", "Manage downloads, recompile, export")
                 }
                 SharpButton("Refresh", { vm.refreshLibrary(announce = true) }, color = AppColors.Elevated, textColor = AppColors.TextMuted)
             }
-            Spacer(Modifier.height(12.dp))
-            Text(
-                "Exported EPUBs are saved to ${vm.exportLocation()}/ — open it from your Files app or any reader.",
-                color = AppColors.TextMuted,
-                fontSize = 11.sp,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "On-device cache: ${vm.booksLocation()}",
-                color = AppColors.TextDim,
-                fontSize = 10.sp,
-            )
         }
 
         if (books.isEmpty()) {
@@ -82,5 +70,19 @@ fun LibraryScreen(vm: AppViewModel) {
                 }
             }
         }
+
+        // Storage info footer.
+        Text(
+            "Exported EPUBs → ${vm.exportLocation()}/",
+            color = AppColors.TextMuted,
+            fontSize = 11.sp,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+        )
+        Text(
+            "Cache: ${vm.booksLocation()}",
+            color = AppColors.TextDim,
+            fontSize = 10.sp,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
     }
 }
