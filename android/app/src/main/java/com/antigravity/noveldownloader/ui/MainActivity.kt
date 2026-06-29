@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +69,23 @@ private val TABS = listOf("Download", "Console", "Library", "Tokens")
 
 @Composable
 fun AppRoot(vm: AppViewModel = viewModel()) {
+    var showSplash by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1500)
+        showSplash = false
+    }
+
+    androidx.compose.animation.Crossfade(targetState = showSplash, label = "splash") { splash ->
+        if (splash) {
+            com.antigravity.noveldownloader.ui.components.SplashScreen()
+        } else {
+            MainShell(vm)
+        }
+    }
+}
+
+@Composable
+private fun MainShell(vm: AppViewModel) {
     var tab by remember { mutableIntStateOf(0) }
     val snackHost = remember { SnackbarHostState() }
     val state by vm.downloadState.collectAsState()

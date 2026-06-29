@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AntigravityNovelDownloader"
+rootProject.name = "AntigravityDownloader"
 include(":app")
