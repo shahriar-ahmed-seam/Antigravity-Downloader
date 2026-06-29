@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/logo.png" alt="Antigravity Downloader" width="160" />
+
 # Antigravity Downloader
 
 **A native Android client that pulls novels from fictionzone.net straight off its JSON gateway and assembles them into clean EPUBs — entirely on-device.**
