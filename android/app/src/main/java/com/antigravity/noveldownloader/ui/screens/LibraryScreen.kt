@@ -32,8 +32,20 @@ fun LibraryScreen(vm: AppViewModel) {
                 Column(Modifier.weight(1f)) {
                     SectionTitle("Library Shelf", "Manage downloads, recompile, export")
                 }
-                SharpButton("Refresh", { vm.refreshLibrary() }, color = AppColors.Elevated, textColor = AppColors.TextMuted)
+                SharpButton("Refresh", { vm.refreshLibrary(announce = true) }, color = AppColors.Elevated, textColor = AppColors.TextMuted)
             }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Exported EPUBs are saved to ${vm.exportLocation()}/ — open it from your Files app or any reader.",
+                color = AppColors.TextMuted,
+                fontSize = 11.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "On-device cache: ${vm.booksLocation()}",
+                color = AppColors.TextDim,
+                fontSize = 10.sp,
+            )
         }
 
         if (books.isEmpty()) {

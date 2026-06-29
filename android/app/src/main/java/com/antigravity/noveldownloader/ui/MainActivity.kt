@@ -100,6 +100,11 @@ private fun MainShell(vm: AppViewModel) {
     // Surface token-expired prompts by hopping to the Tokens tab.
     LaunchedEffect(state.status) {
         if (state.status == JobStatus.TOKEN_EXPIRED) tab = 3
+        if (state.status == JobStatus.COMPLETED) vm.refreshLibrary()
+    }
+    // Always re-scan when the Library tab is opened.
+    LaunchedEffect(tab) {
+        if (tab == 2) vm.refreshLibrary()
     }
 
     Scaffold(

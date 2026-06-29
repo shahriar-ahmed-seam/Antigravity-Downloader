@@ -214,7 +214,21 @@ object DownloadController {
             log("All chapters retrieved. Compiling EPUB…")
             val epub = EpubBuilder(cache).compile(config.novelId, config.startChapter, config.endChapter)
             log("EPUB compiled: ${epub.name}", "success")
-            _state.value = _state.value.copy(status = JobStatus.COMPLETED, epubFile = epub.name, currentChapter = "")
+
+            val saved = try {
+                log("Exporting to ${Exporter.PUBLIC_DISPLAY}…")
+                Exporter.saveToDownloads(context, epub).also { log("Saved to $it", "success") }
+            } catch (e: Exception) {
+                log("Public export failed (${e.message}); the EPUB is still in the in-app library.", "warn")
+                null
+            }
+
+            _state.value = _state.value.copy(
+                status = JobStatus.COMPLETED,
+                epubFile = epub.name,
+                savedPath = saved,
+                currentChapter = "",
+            )
         } catch (e: AbortSignal) {
             finishAborted()
         } catch (e: Exception) {

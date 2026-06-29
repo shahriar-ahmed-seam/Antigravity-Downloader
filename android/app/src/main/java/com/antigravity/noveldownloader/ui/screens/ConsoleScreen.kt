@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -87,6 +88,16 @@ fun ConsoleScreen(vm: AppViewModel) {
             if (state.currentChapter.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(state.currentChapter, color = AppColors.PrimaryBright, fontSize = 12.sp, maxLines = 1)
+            }
+            state.savedPath?.let {
+                Spacer(Modifier.height(10.dp))
+                Surface(color = AppColors.Success.copy(alpha = 0.12f)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("EPUB SAVED TO", color = AppColors.Success, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Spacer(Modifier.height(2.dp))
+                        Text(it, color = AppColors.TextMain, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                    }
+                }
             }
             state.error?.let {
                 Spacer(Modifier.height(8.dp))

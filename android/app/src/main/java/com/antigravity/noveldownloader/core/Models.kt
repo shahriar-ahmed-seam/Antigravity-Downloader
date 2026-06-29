@@ -60,6 +60,7 @@ data class DownloadState(
     val skipped: Int = 0,
     val currentChapter: String = "",
     val epubFile: String? = null,
+    val savedPath: String? = null,
     val error: String? = null,
 ) {
     val percent: Float

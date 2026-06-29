@@ -143,12 +143,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // --- Library ---
-    fun refreshLibrary() {
+    fun refreshLibrary(announce: Boolean = false) {
         viewModelScope.launch {
             val books = withContext(Dispatchers.IO) { cache.listBooks() }
             _library.value = books
+            if (announce) snackbar = "Library: ${books.size} book(s) found."
         }
     }
+
+    /** Absolute on-device path where chapter files and the in-app EPUB are cached. */
+    fun booksLocation(): String = cache.booksDir.absolutePath
+
+    /** Public folder where exported EPUBs land. */
+    fun exportLocation(): String = com.antigravity.noveldownloader.core.Exporter.PUBLIC_DISPLAY
 
     fun deleteBook(novelId: String) {
         viewModelScope.launch {
