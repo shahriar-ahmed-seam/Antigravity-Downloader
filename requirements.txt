@@ -1,0 +1,12 @@
+# fictionzone.net novel downloader — required + optional dependencies
+#
+# Required:
+requests>=2.31.0
+curl-cffi>=0.7.1     # Chrome TLS impersonation to bypass Cloudflare 403
+
+# Optional but recommended:
+beautifulsoup4>=4.12.0  # nicer HTML parsing if you swap it into fetch_book_info
+lxml>=5.0.0             # faster parser for beautifulsoup4
+EbookLib>=0.18          # high-quality EPUB assembly; compile_epub.py falls back
+                        # to a built-in zipfile path if this is absent
+Pillow>=10.0.0          # only needed if you add cover post-processing

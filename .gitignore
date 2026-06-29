@@ -1,0 +1,39 @@
+# ---- Secrets ----
+# Never commit auth tokens or signing material.
+**/.env
+android/keystore.properties
+android/keystore/*.keystore
+android/keystore/*.jks
+*.keystore
+*.jks
+
+# ---- Downloaded content (large; not source) ----
+/books/
+**/diagnose_results.txt
+testing/parsed/
+
+# ---- Android / Gradle ----
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/local.properties
+android/*.log
+.cxx/
+*.apk
+*.aab
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- IDE / OS ----
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

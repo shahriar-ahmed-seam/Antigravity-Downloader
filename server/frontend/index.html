@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FictionZone Novel Downloader</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <span class="icon">🛸</span>
+                <h1>Antigravity Novel Downloader</h1>
+            </div>
+            <div class="token-status-badge" id="token-status-indicator">
+                <span class="dot"></span> Token Status: <span class="status-text">Loading...</span>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <!-- Left Column: Controls and Configurations -->
+            <section class="control-panel glass-card">
+                <div class="card-header">
+                    <h2>Download Novel</h2>
+                    <p class="subtitle">Extract, fetch, cache, and compile to EPUB</p>
+                </div>
+
+                <form id="download-form" class="form-container">
+                    <!-- Token Info (read-only, no user input) -->
+                    <div class="input-group token-info-row">
+                        <label>Auth Token</label>
+                        <div class="token-info-box" id="token-info-box">
+                            <span class="token-mono" id="token-preview-text">Loading from .env...</span>
+                            <button type="button" id="btn-check-token" class="btn btn-secondary btn-sm">Verify</button>
+                        </div>
+                        <span class="input-hint">Token is loaded from <code>.env</code> file — edit that file to change it.</span>
+                    </div>
+
+                    <!-- Step 1: URL -->
+                    <div class="input-group">
+                        <label for="novel-url">Novel Landing URL</label>
+                        <input type="url" id="novel-url" placeholder="https://fictionzone.net/novel/slug-here" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="novel-id-override">Novel ID <span style="opacity:0.6;font-size:0.85em;">(Optional / Manual override)</span></label>
+                        <input type="text" id="novel-id-override" placeholder="e.g. 71679 (Leave blank to auto-detect)">
+                    </div>
+
+                    <button type="button" id="btn-fetch-info" class="btn btn-primary btn-full">
+                        <span class="btn-icon">🔍</span> Analyze Novel
+                    </button>
+
+                    <!-- Step 2: Book Info (Hidden until loaded) -->
+                    <div id="loaded-book-card" class="nested-glass-card hidden">
+                        <div class="book-mini-meta">
+                            <img id="book-meta-cover" src="" alt="Book Cover" class="meta-cover-thumb">
+                            <div class="meta-details">
+                                <h3 id="book-meta-title">Novel Title</h3>
+                                <p class="author">By <span id="book-meta-author">Author</span></p>
+                                <span class="status-tag" id="book-meta-status">Status</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Range Limit Configuration -->
+                        <div class="range-config-container">
+                            <div class="range-labels">
+                                <span>Chapter Limits (Total: <strong id="total-chapters-lbl">0</strong>)</span>
+                            </div>
+                            <div class="range-inputs">
+                                <div class="num-input">
+                                    <label for="start-chapter">Start</label>
+                                    <input type="number" id="start-chapter" min="1" value="1">
+                                    <span id="start-chapter-title" class="chapter-title-hint"></span>
+                                </div>
+                                <div class="num-input">
+                                    <label for="end-chapter">End</label>
+                                    <input type="number" id="end-chapter" min="1" value="100">
+                                    <span id="end-chapter-title" class="chapter-title-hint"></span>
+                                </div>
+                            </div>
+                            <div class="options-checkboxes">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="opt-renumber">
+                                    <span class="checkmark"></span>
+                                    Renumber Chapters (1..N)
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="opt-highlight">
+                                    <span class="checkmark"></span>
+                                    Enable Highlights
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="opt-force">
+                                    <span class="checkmark"></span>
+                                    Ignore Cache (Redownload All)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" id="btn-start-download" class="btn btn-success btn-full">
+                            <span class="btn-icon">🚀</span> Start Downloader
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Right Column: Live Console & Progress -->
+            <section class="live-monitor-panel glass-card">
+                <div class="card-header">
+                    <h2>Live Downloader Console</h2>
+                    <p class="subtitle">Real-time gateway tracking and task progress</p>
+                </div>
+
+                <!-- Progress Visual -->
+                <div id="progress-container" class="progress-section inactive">
+                    <div class="progress-bar-container">
+                        <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+                        <span class="progress-percent" id="progress-text">0%</span>
+                    </div>
+                    <div class="progress-metrics">
+                        <span>Status: <strong id="task-status-text">Idle</strong></span>
+                        <span>Fetched: <strong id="chapters-fetched-text">0 / 0</strong></span>
+                        <span id="eta-container" class="hidden">ETA: <strong id="eta-text">--</strong></span>
+                    </div>
+                    <div class="downloader-controls hidden" id="job-controls">
+                        <button id="btn-pause-job" class="btn btn-warning btn-sm">Pause</button>
+                        <button id="btn-resume-job" class="btn btn-success btn-sm hidden">Resume</button>
+                        <button id="btn-abort-job" class="btn btn-danger btn-sm">Abort</button>
+                    </div>
+                </div>
+
+                <!-- Live Log Console -->
+                <div class="console-wrapper">
+                    <div class="console-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="title">Logs Stream</span>
+                        <button id="btn-clear-logs" class="btn-clear">Clear</button>
+                    </div>
+                    <div class="console-body" id="console-logs">
+                        <div class="log-line system">Waiting to initialize download job...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Library Section -->
+        <section class="library-panel glass-card">
+            <div class="card-header">
+                <h2>Local Library Shelf</h2>
+                <p class="subtitle">Manage books downloaded, recompile ranges, or fetch EPUB files</p>
+            </div>
+            
+            <div class="library-grid" id="library-grid">
+                <!-- Book Cards will be dynamically inserted here -->
+                <div class="empty-library">
+                    <span>📚 Your local book shelf is currently empty. Start a download above!</span>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

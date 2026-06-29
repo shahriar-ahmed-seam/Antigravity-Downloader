@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Antigravity</string>
+    <string name="download_channel_name">Novel Downloads</string>
+    <string name="download_channel_desc">Progress for ongoing novel downloads</string>
+</resources>
