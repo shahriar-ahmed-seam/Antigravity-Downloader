@@ -111,6 +111,7 @@ object HtmlParser {
             """/novel/[^/]+/(\d+)""",
             """/novel/[^/]+-(\d+)""",
             """chapter-lists.*novel_id=(\d+)""",
+            """/omniportal/(?:[^/]+/)?(\d+)""",
             """novel-detail.*novel_id=(\d+)""",
         )
         for (p in patterns) {

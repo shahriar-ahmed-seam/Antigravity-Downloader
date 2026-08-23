@@ -28,6 +28,14 @@ import com.antigravity.noveldownloader.ui.theme.AppColors
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.webkit.CookieManager
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun TokensScreen(vm: AppViewModel) {
@@ -48,6 +56,8 @@ fun TokensScreen(vm: AppViewModel) {
             )
             Spacer(Modifier.height(12.dp))
             SharpButton("Add Token", { vm.addToken() }, Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
+            SharpButton("Login in Browser", { vm.showLoginWebView = true }, Modifier.fillMaxWidth(), color = AppColors.PrimaryBright)
             Spacer(Modifier.height(10.dp))
             Text(
                 "Capture from your browser: DevTools → Network → any gateway request → " +
@@ -85,6 +95,54 @@ fun TokensScreen(vm: AppViewModel) {
                     }
                     Spacer(Modifier.height(0.dp))
                     SharpButton("Remove", { vm.removeToken(token) }, color = AppColors.Danger)
+                }
+            }
+        }
+    }
+
+    if (vm.showLoginWebView) {
+        Dialog(
+            onDismissRequest = { vm.showLoginWebView = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Login to fictionzone.net", color = AppColors.TextMain, fontSize = 18.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        SharpButton("Close", { vm.showLoginWebView = false }, color = AppColors.Danger)
+                    }
+                    AndroidView(
+                        factory = { context ->
+                            WebView(context).apply {
+                                @android.annotation.SuppressLint("SetJavaScriptEnabled")
+                                settings.javaScriptEnabled = true
+                                settings.domStorageEnabled = true
+                                webViewClient = object : WebViewClient() {
+                                    override fun onPageFinished(view: WebView, url: String) {
+                                        super.onPageFinished(view, url)
+                                        val cookies = CookieManager.getInstance().getCookie(url)
+                                        if (cookies != null) {
+                                            val tokenCookie = cookies.split(";").find { it.trim().startsWith("fz_access_token=") }
+                                            if (tokenCookie != null) {
+                                                val token = tokenCookie.substringAfter("=").trim()
+                                                if (token.startsWith("ey")) {
+                                                    vm.newTokenInput = "Bearer $token"
+                                                    vm.addToken()
+                                                    vm.showLoginWebView = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                loadUrl("https://fictionzone.net/")
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }

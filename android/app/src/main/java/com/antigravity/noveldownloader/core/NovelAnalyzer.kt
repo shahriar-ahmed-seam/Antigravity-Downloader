@@ -22,8 +22,8 @@ class NovelAnalyzer(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     suspend fun analyze(url: String, fallbackNovelId: String?, tokens: List<String>): Result<AnalyzeResult> {
-        if (!url.contains("fictionzone.net/novel/")) {
-            return Result.failure(IllegalArgumentException("URL must contain fictionzone.net/novel/"))
+        if (!url.contains("fictionzone.net/novel/") && !url.contains("fictionzone.net/omniportal/")) {
+            return Result.failure(IllegalArgumentException("URL must contain fictionzone.net/novel/ or fictionzone.net/omniportal/"))
         }
         GatewayEngine.init(context)
         if (!GatewayEngine.awaitReady()) {

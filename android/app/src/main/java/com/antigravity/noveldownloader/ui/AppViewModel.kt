@@ -59,6 +59,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     var snackbar by mutableStateOf<String?>(null)
     var newTokenInput by mutableStateOf("")
+    var showLoginWebView by androidx.compose.runtime.mutableStateOf(false)
 
     init {
         refreshLibrary()
@@ -128,6 +129,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             renumber = renumber,
             refreshIndex = refreshIndex,
             shuffle = shuffle,
+            url = url,
         )
         DownloadController.clearLogs()
         DownloadService.start(getApplication(), config, toks, meta.title)
