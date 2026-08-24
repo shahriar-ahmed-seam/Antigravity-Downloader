@@ -94,4 +94,5 @@ data class DownloadConfig(
     val refreshIndex: Boolean = false,
     val shuffle: Boolean = true,
     val rotationMode: RotationMode = RotationMode.ROUND_ROBIN,
+    val url: String = "",
 )

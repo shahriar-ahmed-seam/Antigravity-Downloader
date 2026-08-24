@@ -169,13 +169,20 @@ object DownloadController {
                 log("Fetching ${i + 1}/${pending.size}: idx=$cIdx [$cId] — $cTitle")
                 _state.value = _state.value.copy(currentChapter = cTitle)
 
-                val result = GatewayEngine.postGateway(
-                    "/platform/chapter-content",
-                    mapOf("novel_id" to config.novelId, "chapter_id" to cId, "highlight" to config.highlight),
-                    token,
-                )
 
-                when (val outcome = interpret(result)) {
+                val isOmni = config.url.contains("omniportal")
+                val result = if (isOmni) {
+                    GatewayEngine.getHtml("https://fictionzone.net/omniportal/fq/${config.novelId}/$cId", token = token)
+                } else {
+                    GatewayEngine.postGateway(
+                        "/platform/chapter-content",
+                        mapOf("novel_id" to config.novelId, "chapter_id" to cId, "highlight" to config.highlight),
+                        token,
+                    )
+                }
+
+                when (val outcome = if (isOmni) interpretOmni(result) else interpret(result)) {
+
                     is Outcome.Auth -> {
                         log("Token ${TokenStore.info(token).preview} rejected (${outcome.reason}). Rotating.", "warn")
                         deadTokens.add(token)
@@ -309,11 +316,18 @@ object DownloadController {
         if (aborted) throw AbortSignal()
     }
 
+
     private suspend fun ensureIndex(config: DownloadConfig, cache: NovelCache): List<ChapterRef> {
         val existing = cache.getChapterIndex(config.novelId)
         if (existing != null && existing.isNotEmpty() && !config.refreshIndex) return existing
 
         log("Fetching chapter index from gateway…")
+
+        val isOmni = config.url.contains("omniportal")
+        if (isOmni) {
+            return ensureOmniIndex(config, cache)
+        }
+
         val collected = ArrayList<ChapterRef>()
         val seen = HashSet<String>()
         var page = 1
@@ -422,4 +436,51 @@ object DownloadController {
 
     private fun kotlinx.serialization.json.JsonPrimitive.contentOrNull(): String? =
         if (this is kotlinx.serialization.json.JsonNull) null else this.content
+
+    private suspend fun ensureOmniIndex(config: DownloadConfig, cache: NovelCache): List<ChapterRef> {
+        log("Fetching omni chapter index...")
+        val token = liveTokens.firstOrNull()
+        val htmlRes = GatewayEngine.getHtml(config.url.ifBlank { "https://fictionzone.net/omniportal/fq/${config.novelId}" }, token = token)
+        if (!htmlRes.ok || htmlRes.body.contains("challenge-error-text") || htmlRes.body.contains("Just a moment...")) {
+            throw IllegalStateException("Omniportal: Could not load page or blocked by Cloudflare. Please check token/cookies.")
+        }
+
+        val regex = Regex("""href=["'](/omniportal/(?:[^/]+/)?${config.novelId}/(\d+))["'][^>]*>(.*?)</a>""", RegexOption.IGNORE_CASE)
+        val collected = ArrayList<ChapterRef>()
+        val seen = HashSet<String>()
+        var idxCounter = 1
+
+        for (match in regex.findAll(htmlRes.body)) {
+            val cid = match.groupValues[2]
+            if (!seen.add(cid)) continue
+            val title = match.groupValues[3].replace(Regex("""<[^>]+>"""), "").trim()
+            collected.add(ChapterRef(cid, title, idxCounter++))
+        }
+
+        cache.saveChapterIndex(config.novelId, collected)
+        return collected
+    }
+
+    private fun interpretOmni(result: GatewayResult): Outcome {
+        if (!result.ok && result.status == 0) return Outcome.Net(result.error ?: "transport error")
+        if (result.status == 401 || result.status == 403) return Outcome.Auth("HTTP ${result.status} (Cloudflare?)")
+
+        val html = result.body
+        if (html.contains("challenge-error-text") || html.contains("Just a moment...")) {
+            return Outcome.Auth("Cloudflare challenge block")
+        }
+
+        val bodyRegex = Regex("""<body[^>]*>(.*?)</body>""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+        val bodyContent = bodyRegex.find(html)?.groupValues?.get(1) ?: html
+
+        val noScripts = bodyContent.replace(Regex("""<(script|style)[^>]*>.*?</\\1>""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)), "")
+
+        val text = noScripts.replace(Regex("""<[^>]+>"""), "\n")
+
+        var unescaped = text.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace("&quot;", "\"")
+
+        unescaped = unescaped.replace(Regex("""\n+"""), "\n").trim()
+
+        return Outcome.Ok(unescaped)
+    }
 }

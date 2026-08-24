@@ -124,8 +124,14 @@ object GatewayEngine {
     }
 
     /** GET a same-origin HTML page through the Chromium stack. */
-    suspend fun getHtml(url: String, timeoutMs: Long = 30_000): GatewayResult =
-        fetchText(url, method = "GET", body = null, timeoutMs = timeoutMs)
+    suspend fun getHtml(url: String, timeoutMs: Long = 30_000, token: String? = null): GatewayResult {
+        if (token != null) {
+            val t = token.removePrefix("Bearer ").trim()
+            android.webkit.CookieManager.getInstance().setCookie("https://fictionzone.net", "fz_access_token=$t; Domain=fictionzone.net; Path=/")
+            android.webkit.CookieManager.getInstance().flush()
+        }
+        return fetchText(url, method = "GET", body = null, timeoutMs = timeoutMs)
+    }
 
     private suspend fun fetchText(url: String, method: String, body: String?, timeoutMs: Long): GatewayResult {
         if (!awaitReady()) return GatewayResult(false, 0, "", "Engine warm-up timed out")

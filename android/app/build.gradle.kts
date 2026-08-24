@@ -14,6 +14,9 @@ val keystoreProps = Properties().apply {
 }
 
 android {
+    lint {
+        disable.add("OldTargetApi")
+    }
     namespace = "com.antigravity.noveldownloader"
     compileSdk = 35
 
